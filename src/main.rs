@@ -1,10 +1,9 @@
 
-use std::fs;
 use std::process;
 use std::env;
 use regex::Regex;
 
-use touch::{ create_file };
+use touch::{ create_file, show_help, show_version };
 
 fn main() {
     
@@ -13,9 +12,25 @@ fn main() {
         process::exit(1);
     });
    
-    println!("config: {:?}", config);
+    if !config.flags.is_none() {
+        let flags = config.flags.unwrap();
+        
+        for flag in flags {
+            match flag {
+                Flags::Help => {
+                    show_help();
+                    process::exit(0);
+                },
+                Flags::Version => {
+                    show_version();
+                    process::exit(0);
+                },
+                _ => {}
+            };
+        }
+    }
 
-    create_file(config.file_name.as_str()).unwrap_or_else(|err| {
+    create_file(config.file_name.unwrap().as_str()).unwrap_or_else(|err| {
         eprintln!("{}", err);
         process::exit(1);
     });
@@ -24,16 +39,20 @@ fn main() {
 
 #[derive(Debug)]
 enum Flags {
-    H, 
-    I,
-    P,
+    Help,
+    Version,
+    A,
+    C,
+    D,
     F,
-    K,
+    M,
+    R,
+    T
 }
 
 #[derive(Debug)]
 struct Config {
-    file_name: String,
+    file_name: Option<String>,
     flags: Option<Vec<Flags>>
 }
 
@@ -46,15 +65,23 @@ impl Config {
 
         for arg in args {
             if arg.starts_with("-") {
-                println!("{}", &arg[1..]);
-                let arg = match &arg[1..] {
-                    "H" => Some(Flags::H),
-                    "F" => Some(Flags::F),
-                    "I" => Some(Flags::I),
-                    "K" => Some(Flags::K),
-                    _ => None
+                let arg: Flags = match &arg[..] {
+                    "--help" | "-h" => {
+                       return Ok(Config { file_name: None, flags: Some(vec![Flags::Help]) }); 
+                    },
+                    "--version" => {
+                       return Ok(Config { file_name: None, flags: Some(vec![Flags::Version]) }); 
+                    },
+                    "-a" => Flags::A,
+                    "-c" => Flags::C,
+                    "-d" => Flags::D,
+                    "-f" => Flags::F,
+                    "-m" => Flags::M,
+                    "-r" => Flags::R,
+                    "-t" => Flags::T,
+                    _ => return Err("Flag inválida!"), 
                 };
-                flags.push(arg.ok_or("Flag inválida!")?);    
+                flags.push(arg);    
             } else {
                 file_name = Some(arg);
             }
@@ -63,12 +90,10 @@ impl Config {
         if file_name.is_none() {
             return Err("Indique um nome para o ficheiro");
         }
-    
-        let file_name: String = file_name.unwrap();
 
         let regex = Regex::new("[<>:\"/\\\\|?*]").unwrap();
 
-        if regex.is_match(&file_name) {
+        if regex.is_match(file_name.as_ref().unwrap()) {
             return Err("Caracteres inválidos no nome do ficheiro!");
         }
         

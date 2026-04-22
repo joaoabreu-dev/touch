@@ -3,9 +3,17 @@ use std::fs;
 use std::error::Error;
 
 pub fn create_file(file_name: &str) -> Result<(), Box<dyn Error>> {
-    let file = fs::File::create(file_name)?;
+    fs::File::create(file_name)?;
     Ok(())
 }  
+
+pub fn show_help() {
+    unimplemented!()
+}
+
+pub fn show_version() {
+    unimplemented!()
+}
 
 #[cfg(test)]
 mod tests {

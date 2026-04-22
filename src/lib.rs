@@ -12,7 +12,17 @@ pub fn show_help() {
 }
 
 pub fn show_version() {
-    unimplemented!()
+    println!("
+Rusty Touch
+Rust implementation of the touch command for Windows.
+As this is my adaptation of an already existing and very widespread tool, you are free to change and redistribute it.
+Version: {}
+
+
+Author: João Abreu
+Feel free to contact me: jpfernandes.a139@gmail.com.
+Thank you for using!
+        ", env!("CARGO_PKG_VERSION"));
 }
 
 #[cfg(test)]

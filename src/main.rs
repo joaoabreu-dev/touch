@@ -11,77 +11,65 @@ fn main() {
         eprintln!("{}", err);
         process::exit(1);
     });
-   
-    if !config.flags.is_none() {
-        let flags = config.flags.unwrap();
-        
-        for flag in flags {
-            match flag {
-                Flags::Help => {
-                    show_help();
-                    process::exit(0);
-                },
-                Flags::Version => {
-                    show_version();
-                    process::exit(0);
-                },
-                _ => {}
-            };
-        }
+    
+    if config.show_help {
+        show_help();
+        return;
     }
 
-    create_file(config.file_name.unwrap().as_str()).unwrap_or_else(|err| {
-        eprintln!("{}", err);
-        process::exit(1);
-    });
+    if config.show_version {
+        show_version();
+        return;
+    }
 
-}
-
-#[derive(Debug)]
-enum Flags {
-    Help,
-    Version,
-    A,
-    C,
-    D,
-    F,
-    M,
-    R,
-    T
+    if config.create_file {
+        create_file(config.file_name.unwrap().as_str()).unwrap_or_else(|err| {
+            eprintln!("{}", err);
+            process::exit(1);
+        });
+    }
 }
 
 #[derive(Debug)]
 struct Config {
     file_name: Option<String>,
-    flags: Option<Vec<Flags>>
+    show_help: bool,
+    show_version: bool,
+    update_atime: bool,
+    create_file: bool
 }
 
 impl Config {
     fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
         args.next(); 
-
-        let mut flags: Vec<Flags> = Vec::new();
+            
+        let mut show_help = false;
+        let mut show_version = false;
+        let mut update_atime = false;
+        let mut create_file = true;
         let mut file_name: Option<String> = None;
 
         for arg in args {
             if arg.starts_with("-") {
-                let arg: Flags = match &arg[..] {
+                match &arg[..] {
                     "--help" | "-h" => {
-                       return Ok(Config { file_name: None, flags: Some(vec![Flags::Help]) }); 
+                        show_help = true;
+                        create_file = false;
+                        return Ok(Config { file_name, show_help, show_version, update_atime, create_file });
                     },
                     "--version" => {
-                       return Ok(Config { file_name: None, flags: Some(vec![Flags::Version]) }); 
+                        show_version = true;
+                        create_file = false;
+                        return Ok(Config { file_name, show_help, show_version, update_atime, create_file });
                     },
-                    "-a" => Flags::A,
-                    "-c" => Flags::C,
-                    "-d" => Flags::D,
-                    "-f" => Flags::F,
-                    "-m" => Flags::M,
-                    "-r" => Flags::R,
-                    "-t" => Flags::T,
+                    "-a" => { 
+                        update_atime = true;
+                    },
+                    "-c" => {
+                        create_file = false;
+                    },
                     _ => return Err("Flag inválida!"), 
                 };
-                flags.push(arg);    
             } else {
                 file_name = Some(arg);
             }
@@ -97,11 +85,14 @@ impl Config {
             return Err("Caracteres inválidos no nome do ficheiro!");
         }
         
-        if flags.len() > 0 {
-            Ok(Config { file_name, flags: Some(flags) })
-        } else {
-            Ok(Config { file_name, flags: None })
-        }
+        
+        Ok(Config {
+            file_name,
+            show_help,
+            show_version,
+            update_atime,
+            create_file
+        })
 
     }
 

@@ -13,7 +13,7 @@ fn main() {
         process::exit(1);
     });
     
-    let file_name: Rc<String> = config.file_name.unwrap().into();
+    let file_name = config.file_name.unwrap();
 
     if config.show_help {
         show_help();
@@ -26,14 +26,14 @@ fn main() {
     }
 
     if config.create_file {
-        create_file(file_name.as_str()).unwrap_or_else(|err| {
+        create_file(&file_name.as_str()).unwrap_or_else(|err| {
             eprintln!("{}", err);
             process::exit(1);
         });
     }
 
     if config.update_atime {
-        update_atime(file_name.as_str()).unwrap_or_else(|err| {
+        update_atime(&file_name.as_str()).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });

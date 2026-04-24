@@ -1,9 +1,10 @@
 
 use std::process;
 use std::env;
+use std::rc::Rc;
 use regex::Regex;
 
-use touch::{ create_file, show_help, show_version };
+use touch::{ create_file, show_help, show_version, update_atime };
 
 fn main() {
     
@@ -12,6 +13,8 @@ fn main() {
         process::exit(1);
     });
     
+    let file_name: Rc<String> = config.file_name.unwrap().into();
+
     if config.show_help {
         show_help();
         return;
@@ -23,8 +26,15 @@ fn main() {
     }
 
     if config.create_file {
-        create_file(config.file_name.unwrap().as_str()).unwrap_or_else(|err| {
+        create_file(file_name.as_str()).unwrap_or_else(|err| {
             eprintln!("{}", err);
+            process::exit(1);
+        });
+    }
+
+    if config.update_atime {
+        update_atime(file_name.as_str()).unwrap_or_else(|err| {
+            println!("{}", err);
             process::exit(1);
         });
     }

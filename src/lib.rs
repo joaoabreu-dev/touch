@@ -1,11 +1,31 @@
 
-use std::fs;
+use std::fs::{self, FileTimes};
 use std::error::Error;
+use std::time::SystemTime;
 
 pub fn create_file(file_name: &str) -> Result<(), Box<dyn Error>> {
     fs::File::create(file_name)?;
     Ok(())
 }  
+
+pub fn update_atime(file_name: &str) -> Result<(), Box<dyn Error>> {
+    let metadata = fs::metadata(file_name)?;
+    let file_handle = fs::OpenOptions::new()
+                          .write(true)
+                          .open(file_name)?;
+
+    let mtime = metadata.modified()?;
+
+    let now = SystemTime::now();
+
+    let times = FileTimes::new()
+        .set_accessed(now)
+        .set_modified(mtime);
+
+    file_handle.set_times(times)?;
+
+    Ok(())
+}
 
 pub fn show_help() {
     unimplemented!()
@@ -36,6 +56,30 @@ mod tests {
         let result = create_file(file_name);
 
         assert!(result.is_ok(), "Esperava successo, mas deu erro: {:?}", result);
+    }
+
+    #[test]
+    fn test_update_atime() {
+        let file_name = "file.txt";
+        
+        if fs::exists(file_name).is_err() {
+            create_file(file_name);
+        }
+
+        let old_mtime = fs::metadata(file_name).unwrap().modified().unwrap();
+
+        let result = update_atime(file_name);       
+        let now = SystemTime::now();
+
+        assert!(result.is_ok(), "Esperava successo, mas deu erro: {:?}", result);
+        let metadata = fs::metadata(file_name).unwrap();
+        let atime = metadata.accessed().unwrap();
+
+        let difference = now.duration_since(atime).unwrap();
+
+        assert_eq!(old_mtime, metadata.modified().unwrap());
+        assert!(difference.as_secs() < 2, "atime está demasiado desatualizado {:?}", difference);
+
     }
 }
 

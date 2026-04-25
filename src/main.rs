@@ -1,13 +1,12 @@
 
 use std::process;
 use std::env;
-use std::rc::Rc;
 use regex::Regex;
 
-use touch::{ create_file, show_help, show_version, update_atime };
+use touch::{ create_file, show_help, show_version, update_atime, update_mtime };
 
 fn main() {
-    
+
     let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("{}", err);
         process::exit(1);
@@ -38,6 +37,13 @@ fn main() {
             process::exit(1);
         });
     }
+
+    if config.update_mtime {
+        update_mtime(&file_name.as_str()).unwrap_or_else(|err| {
+            println!("{}", err);
+            process::exit(1);
+        });
+    }
 }
 
 #[derive(Debug)]
@@ -46,6 +52,7 @@ struct Config {
     show_help: bool,
     show_version: bool,
     update_atime: bool,
+    update_mtime: bool,
     create_file: bool
 }
 
@@ -56,6 +63,7 @@ impl Config {
         let mut show_help = false;
         let mut show_version = false;
         let mut update_atime = false;
+        let mut update_mtime = false;
         let mut create_file = true;
         let mut file_name: Option<String> = None;
 
@@ -65,18 +73,21 @@ impl Config {
                     "--help" | "-h" => {
                         show_help = true;
                         create_file = false;
-                        return Ok(Config { file_name, show_help, show_version, update_atime, create_file });
+                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file });
                     },
                     "--version" => {
                         show_version = true;
                         create_file = false;
-                        return Ok(Config { file_name, show_help, show_version, update_atime, create_file });
+                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file });
                     },
                     "-a" => { 
                         update_atime = true;
                     },
                     "-c" => {
                         create_file = false;
+                    },
+                    "-m" => {
+                        update_mtime = true;
                     },
                     _ => return Err("Flag inválida!"), 
                 };
@@ -101,6 +112,7 @@ impl Config {
             show_help,
             show_version,
             update_atime,
+            update_mtime,
             create_file
         })
 

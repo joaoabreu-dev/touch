@@ -27,6 +27,25 @@ pub fn update_atime(file_name: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+pub fn update_mtime(file_name: &str) -> Result<(), Box<dyn Error>> {
+    let metadata = fs::metadata(file_name)?;
+    let file_handle = fs::OpenOptions::new()
+                          .write(true)
+                          .open(file_name)?;
+
+    let atime = metadata.accessed()?;
+
+    let now = SystemTime::now();
+
+    let times = FileTimes::new()
+                .set_accessed(atime)
+                .set_modified(now);
+
+    file_handle.set_times(times)?;
+
+    Ok(())
+}
+
 pub fn show_help() {
     unimplemented!()
 }
@@ -62,7 +81,7 @@ mod tests {
     fn test_update_atime() {
         let file_name = "file.txt";
         
-        if fs::exists(file_name).is_err() {
+        if !fs::exists(file_name).unwrap() {
             create_file(file_name);
         }
 
@@ -71,7 +90,7 @@ mod tests {
         let result = update_atime(file_name);       
         let now = SystemTime::now();
 
-        assert!(result.is_ok(), "Esperava successo, mas deu erro: {:?}", result);
+        assert!(result.is_ok(), "Esperava sucesso, mas deu erro: {:?}", result);
         let metadata = fs::metadata(file_name).unwrap();
         let atime = metadata.accessed().unwrap();
 
@@ -79,7 +98,31 @@ mod tests {
 
         assert_eq!(old_mtime, metadata.modified().unwrap());
         assert!(difference.as_secs() < 2, "atime está demasiado desatualizado {:?}", difference);
+    }
 
+    #[test]
+    fn test_update_mtime() {
+        let file_name = "filee.txt";
+
+        if !fs::exists(file_name).unwrap() {
+            create_file(file_name);
+        }
+
+        let old_atime = fs::metadata(file_name).unwrap().accessed().unwrap();
+
+
+        let result = update_mtime(file_name);
+        let now = SystemTime::now();
+
+        assert!(result.is_ok(), "Esparava sucesso, mas deu erro: {:?}", result);
+
+        let metadata = fs::metadata(file_name).unwrap();
+        let mtime = metadata.modified().unwrap();
+
+        let difference = now.duration_since(mtime).unwrap();
+
+        assert_eq!(old_atime, metadata.accessed().unwrap());
+        assert!(difference.as_secs() < 2, "mtime está demasiado desatualizado {:?}", difference);
     }
 }
 

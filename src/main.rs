@@ -3,7 +3,7 @@ use std::process;
 use std::env;
 use regex::Regex;
 
-use touch::{ create_file, show_help, show_version, update_atime, update_mtime };
+use touch::{ touch_file, show_help, show_version, update_atime, update_mtime };
 
 fn main() {
 
@@ -24,22 +24,22 @@ fn main() {
         return;
     }
 
-    if config.create_file {
-        create_file(&file_name.as_str()).unwrap_or_else(|err| {
-            eprintln!("{}", err);
+    if !config.update_atime && !config.update_mtime {
+        touch_file(&file_name, config.create_file).unwrap_or_else(|err| {
+            println!("{}", err);
             process::exit(1);
         });
     }
 
     if config.update_atime {
-        update_atime(&file_name.as_str()).unwrap_or_else(|err| {
+        update_atime(&file_name).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });
     }
 
     if config.update_mtime {
-        update_mtime(&file_name.as_str()).unwrap_or_else(|err| {
+        update_mtime(&file_name).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });

@@ -3,7 +3,7 @@ use std::process;
 use std::env;
 use regex::Regex;
 
-use touch::{ create_file, show_help, show_version, update_atime, update_mtime };
+use touch::{ touch_file, show_help, show_version, update_atime, update_mtime, touch_reference };
 
 fn main() {
 
@@ -24,22 +24,29 @@ fn main() {
         return;
     }
 
-    if config.create_file {
-        create_file(&file_name.as_str()).unwrap_or_else(|err| {
-            eprintln!("{}", err);
+    if config.use_reference {
+        touch_reference().unwrap_or_else(|err| {
+            println!("{}", err);
+            process::exit(1);
+        });
+    }
+
+    if !config.update_atime && !config.update_mtime {
+        touch_file(&file_name, config.create_file).unwrap_or_else(|err| {
+            println!("{}", err);
             process::exit(1);
         });
     }
 
     if config.update_atime {
-        update_atime(&file_name.as_str()).unwrap_or_else(|err| {
+        update_atime(&file_name).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });
     }
 
     if config.update_mtime {
-        update_mtime(&file_name.as_str()).unwrap_or_else(|err| {
+        update_mtime(&file_name).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });
@@ -53,7 +60,9 @@ struct Config {
     show_version: bool,
     update_atime: bool,
     update_mtime: bool,
-    create_file: bool
+    create_file: bool,
+    use_reference: bool,
+    reference: Option<String>
 }
 
 impl Config {
@@ -65,8 +74,10 @@ impl Config {
         let mut update_atime = false;
         let mut update_mtime = false;
         let mut create_file = true;
+        let mut use_reference = false;
+        let mut reference: Option<String> = None;
         let mut file_name: Option<String> = None;
-
+        
         for arg in args {
             if arg.starts_with("-") {
                 match &arg[..] {
@@ -89,6 +100,17 @@ impl Config {
                     "-m" => {
                         update_mtime = true;
                     },
+                    "-r" => {
+                        use_reference = true;
+                        reference = match args.next() {
+                            Some(arg) => {
+                               Some(arg) 
+                            },
+                            None => {
+                                return Err("Ficheiro de referência esperado!");
+                            }
+                        }
+                    }
                     _ => return Err("Flag inválida!"), 
                 };
             } else {

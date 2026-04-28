@@ -3,10 +3,66 @@ use std::fs::{self, FileTimes};
 use std::error::Error;
 use std::time::SystemTime;
 
+#[deprecated(since = "0.4.0", note = "Use touch_file as it has the expected behaviour")]
 pub fn create_file(file_name: &str) -> Result<(), Box<dyn Error>> {
     fs::File::create(file_name)?;
     Ok(())
 }  
+
+pub fn touch_file(file_name: &str, create_file: bool) -> Result<(), Box<dyn Error>> {
+    
+    if !fs::exists(file_name).unwrap() {
+        if create_file {
+            fs::File::create(file_name)?;
+            return Ok(());
+        } else {
+            return Err("Ficheiro não existe!".into());
+        }
+    }
+        
+    let file_handle = fs::OpenOptions::new()
+                     .write(true)
+                     .open(file_name)?;
+
+    let now = SystemTime::now();
+
+    let times = FileTimes::new()
+                .set_accessed(now)
+                .set_modified(now);
+
+    file_handle.set_times(times)?;
+
+    Ok(())
+}
+
+pub fn touch_reference(dest: &str, refer: &str, create: bool) -> Result<(), Box<dyn Error>> {
+    
+    if !fs::exists(dest).unwrap() {
+        if !create {
+            return Err("Destino não existe".into());
+        }
+
+        fs::File::create(dest)?;
+    }
+
+    if !fs::exists(refer).unwrap() {
+        return Err("Referência não encontrada!".into());
+    }
+
+    let file_handle = fs::OpenOptions::new()
+                        .write(true)
+                        .open(dest)?;
+
+    let metadata = fs::metadata(refer)?;
+
+    let times = FileTimes::new() 
+        .set_accessed(metadata.accessed().unwrap())
+        .set_modified(metadata.modified().unwrap());
+
+    file_handle.set_times(times)?;
+
+    Ok(())
+}
 
 pub fn update_atime(file_name: &str) -> Result<(), Box<dyn Error>> {
     let metadata = fs::metadata(file_name)?;
@@ -69,17 +125,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_file() {
-        let file_name = "file.txt";
-        
-        let result = create_file(file_name);
+    fn test_touch_file() {
+        let file_name = "touch_test.txt";
 
-        assert!(result.is_ok(), "Esperava successo, mas deu erro: {:?}", result);
+        //let result_with_create = touch_file(file_name, true);
+        let result_without_create = touch_file(file_name, false);
+
+        //assert!(result_with_create.is_ok(), "Esperava successo, mas deu erro: {:?}", result_with_create);
+        assert!(result_without_create.is_ok(), "Esperava sucesso, mas deu erro: {:?}", result_without_create);
     }
-
+    
     #[test]
     fn test_update_atime() {
-        let file_name = "file.txt";
+        let file_name = "update_atime_test.txt";
         
         if !fs::exists(file_name).unwrap() {
             create_file(file_name);
@@ -102,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_update_mtime() {
-        let file_name = "filee.txt";
+        let file_name = "update_mtime_test.txt";
 
         if !fs::exists(file_name).unwrap() {
             create_file(file_name);
@@ -123,6 +181,26 @@ mod tests {
 
         assert_eq!(old_atime, metadata.accessed().unwrap());
         assert!(difference.as_secs() < 2, "mtime está demasiado desatualizado {:?}", difference);
+    }
+
+    #[test]
+    fn test_touch_reference() {
+        let file_name = "touch_reference_test.txt";
+        let reference = "Cargo.toml";
+        
+        let result_w_create = touch_reference(file_name, reference, true);
+        let result_n_create = touch_reference(file_name, reference, false);
+
+        assert!(result_w_create.is_ok(), "Esperava sucesso, mas deu erro: {:?}", result_w_create);
+        assert!(result_n_create.is_ok(), "Esperava sucesso, mas deu erro: {:?}", result_n_create);
+
+        let metadata = fs::metadata(reference).unwrap();
+        let ref_times = vec![metadata.accessed().unwrap(), metadata.modified().unwrap()];
+
+        let metadata = fs::metadata(file_name).unwrap();
+        let dest_times = vec![metadata.accessed().unwrap(), metadata.modified().unwrap()];
+
+        assert_eq!(ref_times, dest_times);
     }
 }
 

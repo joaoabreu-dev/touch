@@ -1,2 +1,6 @@
 /target
 file.txt
+touch_test.txt
+update_atime_test.txt
+update_mtime_test.txt
+touch_reference_test.txt

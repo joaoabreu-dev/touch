@@ -25,7 +25,7 @@ fn main() {
     }
 
     if config.use_reference {
-        touch_reference().unwrap_or_else(|err| {
+        touch_reference(&file_name, &config.reference.unwrap(), config.create_file).unwrap_or_else(|err| {
             println!("{}", err);
             process::exit(1);
         });
@@ -78,18 +78,18 @@ impl Config {
         let mut reference: Option<String> = None;
         let mut file_name: Option<String> = None;
         
-        for arg in args {
+        while let Some(arg) = args.next() {
             if arg.starts_with("-") {
                 match &arg[..] {
                     "--help" | "-h" => {
                         show_help = true;
                         create_file = false;
-                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file });
+                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file, use_reference, reference });
                     },
                     "--version" => {
                         show_version = true;
                         create_file = false;
-                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file });
+                        return Ok(Config { file_name, show_help, show_version, update_atime, update_mtime, create_file, use_reference, reference });
                     },
                     "-a" => { 
                         update_atime = true;
@@ -135,7 +135,9 @@ impl Config {
             show_version,
             update_atime,
             update_mtime,
-            create_file
+            create_file,
+            use_reference,
+            reference
         })
 
     }

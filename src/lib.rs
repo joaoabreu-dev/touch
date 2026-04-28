@@ -9,16 +9,21 @@ pub fn create_file(file_name: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }  
 
-pub fn touch_file(file_name: &str, create_file: bool) -> Result<(), Box<dyn Error>> {
-    
-    if !fs::exists(file_name).unwrap() {
-        if create_file {
-            fs::File::create(file_name)?;
-            return Ok(());
-        } else {
-            return Err("Ficheiro não existe!".into());
-        }
+fn ensure_file_exists(file_name: &str, create_if_missing: bool) -> Result<(), Box<dyn Error>> {
+    if fs::exists(file_name)? {
+        return Ok(());
     }
+
+    if create_if_missing {
+        fs::File::create(file_name)?;
+        Ok(())
+    } else {
+        Err(format!("Ficheiro {} não existe!", file_name).into())
+    }
+}
+
+pub fn touch_file(file_name: &str, create_file: bool) -> Result<(), Box<dyn Error>> {
+    ensure_file_exists(file_name, create_file)?;
         
     let file_handle = fs::OpenOptions::new()
                      .write(true)
@@ -36,18 +41,9 @@ pub fn touch_file(file_name: &str, create_file: bool) -> Result<(), Box<dyn Erro
 }
 
 pub fn touch_reference(dest: &str, refer: &str, create: bool) -> Result<(), Box<dyn Error>> {
-    
-    if !fs::exists(dest).unwrap() {
-        if !create {
-            return Err("Destino não existe".into());
-        }
+    ensure_file_exists(dest, create)?;
 
-        fs::File::create(dest)?;
-    }
-
-    if !fs::exists(refer).unwrap() {
-        return Err("Referência não encontrada!".into());
-    }
+    ensure_file_exists(refer, false)?; 
 
     let file_handle = fs::OpenOptions::new()
                         .write(true)
@@ -126,18 +122,18 @@ mod tests {
 
     #[test]
     fn test_touch_file() {
-        let file_name = "touch_test.txt";
+        let file_name = "tests/touch_test.txt";
 
-        //let result_with_create = touch_file(file_name, true);
+        let result_with_create = touch_file(file_name, true);
         let result_without_create = touch_file(file_name, false);
 
-        //assert!(result_with_create.is_ok(), "Esperava successo, mas deu erro: {:?}", result_with_create);
+        assert!(result_with_create.is_ok(), "Esperava successo, mas deu erro: {:?}", result_with_create);
         assert!(result_without_create.is_ok(), "Esperava sucesso, mas deu erro: {:?}", result_without_create);
     }
     
     #[test]
     fn test_update_atime() {
-        let file_name = "update_atime_test.txt";
+        let file_name = "tests/update_atime_test.txt";
         
         if !fs::exists(file_name).unwrap() {
             create_file(file_name);
@@ -160,7 +156,7 @@ mod tests {
 
     #[test]
     fn test_update_mtime() {
-        let file_name = "update_mtime_test.txt";
+        let file_name = "tests/update_mtime_test.txt";
 
         if !fs::exists(file_name).unwrap() {
             create_file(file_name);
@@ -185,7 +181,7 @@ mod tests {
 
     #[test]
     fn test_touch_reference() {
-        let file_name = "touch_reference_test.txt";
+        let file_name = "tests/touch_reference_test.txt";
         let reference = "Cargo.toml";
         
         let result_w_create = touch_reference(file_name, reference, true);
@@ -201,6 +197,15 @@ mod tests {
         let dest_times = vec![metadata.accessed().unwrap(), metadata.modified().unwrap()];
 
         assert_eq!(ref_times, dest_times);
+    }
+
+    #[test]
+    fn test_file_exists() {
+        let file_name = "tests/test_file_exists.txt";
+    
+        let ensure = ensure_file_exists(file_name, true);
+
+        assert!(ensure.is_ok());
     }
 }
 

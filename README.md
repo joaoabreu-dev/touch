@@ -1,6 +1,6 @@
 **PT**
 # Touch (Windows)
-![Version](https://img.shields.io/badge/version-0.5.0-blue)
+![Version](https://img.shields.io/badge/version-0.5.1-blue)
 
 Uma implementação em Rust do comando Unix/Linux `touch` para o ecossistema Windows.
 

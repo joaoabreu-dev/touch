@@ -99,7 +99,29 @@ pub fn update_mtime(file_name: &str) -> Result<(), Box<dyn Error>> {
 }
 
 pub fn show_help() {
-    unimplemented!()
+    println!("
+Usage: touch [OPTION] FILE
+Update the access and modification times of the file.
+
+Available options:
+    -a                  change only the access time of the file
+    -c                  do not create any files
+    -m                  change only the modification time of the file
+    -r REFERENCE_FILE   change access and modification time of a file base on another
+    
+    --help              display this help and exit
+    --version           display version information and exit
+
+Examples:
+    touch file.txt
+    touch -c file.txt
+    touch -r source.txt dest.txt
+    touch -m file.txt
+
+Full documentation and source code on https://github.com/joaoabreu-dev/touch
+For any questions or sugestions regarding the program, please contact me on jpfernandes.a139@gmail.com.
+
+    ");
 }
 
 pub fn show_version() {

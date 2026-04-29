@@ -1,7 +1,6 @@
 
 use std::process;
 use std::env;
-use regex::Regex;
 
 use touch::{ touch_file, show_help, show_version, update_atime, update_mtime, touch_reference };
 
@@ -12,8 +11,6 @@ fn main() {
         process::exit(1);
     });
     
-    let file_name = config.file_name.unwrap();
-
     if config.show_help {
         show_help();
         return;
@@ -23,6 +20,8 @@ fn main() {
         show_version();
         return;
     }
+
+    let file_name = config.file_name.unwrap();
 
     if config.use_reference {
         touch_reference(&file_name, &config.reference.unwrap(), config.create_file).unwrap_or_else(|err| {
@@ -114,6 +113,7 @@ impl Config {
                     _ => return Err("Flag inválida!"), 
                 };
             } else {
+                Self::is_file_name_valid(&arg).map_err(|e| e)?; 
                 file_name = Some(arg);
             }
         }
@@ -121,13 +121,6 @@ impl Config {
         if file_name.is_none() {
             return Err("Indique um nome para o ficheiro");
         }
-
-        let regex = Regex::new("[<>:\"/\\\\|?*]").unwrap();
-
-        if regex.is_match(file_name.as_ref().unwrap()) {
-            return Err("Caracteres inválidos no nome do ficheiro!");
-        }
-        
         
         Ok(Config {
             file_name,
@@ -140,6 +133,31 @@ impl Config {
             reference
         })
 
+    }
+
+    fn is_file_name_valid(file_name: &str) -> Result<(), &'static str> {
+        
+        if file_name.len() > 255 {
+            return Err("O número máximo de caracteres permitido é 255.");
+        }
+
+        let invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
+        if file_name.chars().any(|c| invalid_chars.contains(&c)) {
+            return Err("O nome do ficheiro contém caracteres inválidos.");
+        }
+
+        let reserved_names = [
+            "CON", "PRN", "AUX", "NUL",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9"
+        ];
+
+        let base_name = file_name.split('.').next().unwrap_or("").to_uppercase();
+        if reserved_names.contains(&base_name.as_str()) {
+            return Err("O nome do ficheiro é reservado pelo sistema.");
+        }
+        
+        Ok(())
     }
 
 }

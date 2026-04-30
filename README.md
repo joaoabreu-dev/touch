@@ -1,3 +1,5 @@
+Licensed under the MIT License. See LICENSE for details.
+
 **PT**
 # Touch (Windows)
 ![Version](https://img.shields.io/badge/version-0.5.1-blue)

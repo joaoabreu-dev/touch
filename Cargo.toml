@@ -1,7 +1,8 @@
 [package]
 name = "touch"
-version = "0.5.1"
+version = "1.0.0"
 edition = "2024"
+license = "MIT"
 
 [dependencies]
 regex = "1.12.3"

@@ -2,7 +2,7 @@ Licensed under the MIT License. See LICENSE for details.
 
 **PT**
 # Touch (Windows)
-![Version](https://img.shields.io/badge/version-0.5.1-blue)
+![Version](https://img.shields.io/badge/version-1.0.0-green)
 
 Uma implementação em Rust do comando Unix/Linux `touch` para o ecossistema Windows.
 

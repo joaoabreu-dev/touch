@@ -22,7 +22,7 @@ Este projeto traz essa simplicidade para o Windows, permitindo criar ficheiros v
 
 Certifica-te de que tens o Rust instalado. Depois, na raiz do projeto, executa:
 ```
-cargo install --path 
+cargo install --path .
 ``` 
 2. Configurar o PATH:
 Para utilizares o comando touch em qualquer terminal, a pasta de binários do Cargo deve estar nas tuas Variáveis de Ambiente (PATH).
@@ -59,11 +59,11 @@ This project brings that simplicity to Windows, making it easy to create empty f
 1. Build and Install:
 Make sure you have Rust installed. Then run the following command from the project root:
 ``` 
-cargo install --path 
+cargo install --path .
 ``` 
-2. Environment Variavles (PATH):
-To use the touch command from any terminal, the Cargo bin folde must be included in the Environment Variables (PATH).
-It is tipically located at:
+2. Environment Variables (PATH):
+To use the touch command from any terminal, the Cargo bin folder must be included in the Environment Variables (PATH).
+It is typically located at:
 %USERPROFILE%\.cargo\bin
 
 `

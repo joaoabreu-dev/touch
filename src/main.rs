@@ -28,27 +28,29 @@ fn main() {
             println!("{}", err);
             process::exit(1);
         });
-    }
 
-    if !config.update_atime && !config.update_mtime {
-        touch_file(&file_name, config.create_file).unwrap_or_else(|err| {
-            println!("{}", err);
-            process::exit(1);
-        });
+        return;
     }
-
-    if config.update_atime {
-        update_atime(&file_name).unwrap_or_else(|err| {
-            println!("{}", err);
-            process::exit(1);
-        });
-    }
-
-    if config.update_mtime {
-        update_mtime(&file_name).unwrap_or_else(|err| {
-            println!("{}", err);
-            process::exit(1);
-        });
+    
+    match (config.update_atime, config.update_mtime) {
+        (true, true) | (false, false) => {
+            touch_file(&file_name, config.create_file).unwrap_or_else(|err| {
+                println!("{}", err);
+                process::exit(1);
+            });
+        },
+        (true, false) => {
+            update_atime(&file_name).unwrap_or_else(|err| {
+                println!("{}", err);
+                process::exit(1);
+            });
+        },
+        (false, true) => {
+            update_mtime(&file_name).unwrap_or_else(|err| {
+                println!("{}", err);
+                process::exit(1);
+            });
+        }
     }
 }
 

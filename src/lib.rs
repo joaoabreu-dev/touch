@@ -107,7 +107,7 @@ Available options:
     -a                  change only the access time of the file
     -c                  do not create any files
     -m                  change only the modification time of the file
-    -r REFERENCE_FILE   change access and modification time of a file base on another
+    -r REFERENCE_FILE   change access and modification time of a file based on another
     
     --help              display this help and exit
     --version           display version information and exit
@@ -119,7 +119,7 @@ Examples:
     touch -m file.txt
 
 Full documentation and source code on https://github.com/joaoabreu-dev/touch
-For any questions or sugestions regarding the program, please contact me on jpfernandes.a139@gmail.com.
+For any questions or suggestions regarding the program, please contact me on jpfernandes.a139@gmail.com.
 
     ");
 }

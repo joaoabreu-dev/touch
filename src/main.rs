@@ -106,11 +106,11 @@ impl Config {
                                Some(arg) 
                             },
                             None => {
-                                return Err("Ficheiro de referência esperado!");
+                                return Err("Option -r requires a reference file. Usage: touch -r REFERENCE FILE");
                             }
                         }
                     }
-                    _ => return Err("Flag inválida!"), 
+                    _ => return Err("Invalid option. Run --help for usage."), 
                 };
             } else {
                 Self::is_file_name_valid(&arg).map_err(|e| e)?; 
@@ -119,7 +119,7 @@ impl Config {
         }
        
         if file_name.is_none() {
-            return Err("Indique um nome para o ficheiro");
+            return Err("No file specified. Usage: touch [OPTIONS] FILE");
         }
         
         Ok(Config {
@@ -138,12 +138,12 @@ impl Config {
     fn is_file_name_valid(file_name: &str) -> Result<(), &'static str> {
         
         if file_name.len() > 255 {
-            return Err("O número máximo de caracteres permitido é 255.");
+            return Err("File name too long (max 255 characters).");
         }
 
         let invalid_chars = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
         if file_name.chars().any(|c| invalid_chars.contains(&c)) {
-            return Err("O nome do ficheiro contém caracteres inválidos.");
+            return Err("File name contains invalid characters: < > : \" / \\ | ? *");
         }
 
         let reserved_names = [
@@ -154,7 +154,7 @@ impl Config {
 
         let base_name = file_name.split('.').next().unwrap_or("").to_uppercase();
         if reserved_names.contains(&base_name.as_str()) {
-            return Err("O nome do ficheiro é reservado pelo sistema.");
+            return Err("File name is reserved by the Windows system (e.g. CON, NUL, PRN).");
         }
         
         Ok(())

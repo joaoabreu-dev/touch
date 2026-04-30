@@ -18,7 +18,7 @@ fn ensure_file_exists(file_name: &str, create_if_missing: bool) -> Result<(), Bo
         fs::File::create(file_name)?;
         Ok(())
     } else {
-        Err(format!("Ficheiro {} não existe!", file_name).into())
+        Err(format!("File {} doesn't exist.", file_name).into())
     }
 }
 
